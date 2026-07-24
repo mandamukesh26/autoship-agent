@@ -14,11 +14,26 @@ def plan_tasks(repo_data: dict):
         messages=[
             {
                 "role": "system",
-                "content": "You are a senior software architect. Analyze this repository and return a JSON object with: project_type (string), complexity (low/medium/high), main_files (array of strings), expected_issues (array of strings), and plan_steps (array of strings describing the review process)."
+                "content": """You are an autonomous code review agent
+                using Codex-style agentic reasoning.
+                
+                STEP 1: Analyze repository structure
+                STEP 2: Identify project type and complexity
+                STEP 3: Plan systematic review approach
+                STEP 4: List expected issues to find
+                STEP 5: Review your plan for completeness
+                
+                Return JSON with: project_type, complexity,
+                main_files, expected_issues, plan_steps, 
+                confidence_score"""
             },
             {
                 "role": "user",
-                "content": f"Repository: {repo_data['owner']}/{repo_data['repo']}\nTotal Files: {repo_data['total_files']}\nFile List: {files}\n\nCreate a comprehensive review plan."
+                "content": f"""Repository: {repo_data['owner']}/{repo_data['repo']}
+                Total Files: {repo_data['total_files']}
+                File List: {files}
+                
+                Execute your agentic review planning now."""
             }
         ],
         response_format={"type": "json_object"}
