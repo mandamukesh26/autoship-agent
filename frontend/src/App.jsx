@@ -1,17 +1,32 @@
 import { useState } from 'react'
 import axios from 'axios'
+import './App.css'
 
 function App() {
   const [url, setUrl] = useState('')
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState(null)
   const [error, setError] = useState('')
+  const [currentStep, setCurrentStep] = useState(0)
+
+  const steps = [
+    '📥 Fetching repository...',
+    '🔍 Bug Detector Agent scanning...',
+    '🛠️ Fix Generator Agent working...',
+    '🧐 Self-Reviewer Agent validating...'
+  ]
 
   const analyzeRepo = async (e) => {
     e.preventDefault()
     setLoading(true)
     setError('')
     setResult(null)
+    setCurrentStep(0)
+
+    // Animate steps
+    const stepInterval = setInterval(() => {
+      setCurrentStep(prev => (prev < 3 ? prev + 1 : prev))
+    }, 4000)
 
     try {
       const response = await axios.post('https://autoship-agent.onrender.com/analyze', {
@@ -19,111 +34,259 @@ function App() {
       })
       setResult(response.data)
     } catch (err) {
-      setError('Failed to analyze. Check the URL and try again.')
+      setError('Analysis failed. Please check the URL and try again.')
       console.error(err)
     } finally {
+      clearInterval(stepInterval)
       setLoading(false)
     }
   }
 
+  const getScoreColor = (score) => {
+    if (score >= 80) return '#10b981'
+    if (score >= 60) return '#f59e0b'
+    return '#ef4444'
+  }
+
   return (
-    <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px', fontFamily: 'Arial, sans-serif' }}>
-      <h1 style={{ color: '#2563eb', textAlign: 'center' }}>🤖 AutoShip Agent</h1>
-      <p style={{ textAlign: 'center', color: '#666' }}>AI-powered code review with autonomous bug detection</p>
+    <div className="app">
+      {/* Animated Background */}
+      <div className="bg-animation">
+        <div className="orb orb1"></div>
+        <div className="orb orb2"></div>
+        <div className="orb orb3"></div>
+      </div>
 
-      <form onSubmit={analyzeRepo} style={{ marginTop: '30px' }}>
-        <input
-          type="text"
-          placeholder="Paste GitHub URL (e.g., https://github.com/tiangolo/fastapi)"
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-          style={{
-            width: '100%',
-            padding: '12px',
-            fontSize: '16px',
-            borderRadius: '8px',
-            border: '1px solid #ddd',
-            marginBottom: '10px'
-          }}
-        />
-        <button
-          type="submit"
-          disabled={loading}
-          style={{
-            width: '100%',
-            padding: '12px',
-            backgroundColor: loading ? '#93c5fd' : '#2563eb',
-            color: 'white',
-            border: 'none',
-            borderRadius: '8px',
-            fontSize: '16px',
-            cursor: loading ? 'not-allowed' : 'pointer'
-          }}
-        >
-          {loading ? '🔍 Agents Analyzing...' : '🚀 Analyze Repository'}
-        </button>
-      </form>
+      <div className="container">
+        {/* Header */}
+        <header className="header">
+          <div className="logo">
+            <span className="logo-icon">🤖</span>
+            <h1 className="logo-text">AutoShip Agent</h1>
+          </div>
+          <p className="tagline">Autonomous AI-Powered Code Review System</p>
+          <div className="badges">
+            <span className="badge">✨ 3 AI Agents</span>
+            <span className="badge">⚡ Groq Powered</span>
+            <span className="badge">🎯 Self-Reviewing</span>
+          </div>
+        </header>
 
-      {loading && (
-        <div style={{ marginTop: '20px', padding: '20px', backgroundColor: '#f3f4f6', borderRadius: '8px', textAlign: 'center' }}>
-          <p>🕐 Step 1/4: Fetching repository...</p>
-          <p>🕑 Step 2/4: Bug Detector Agent running...</p>
-          <p>🕒 Step 3/4: Fix Generator Agent working...</p>
-          <p>🕓 Step 4/4: Self-Reviewer Agent checking...</p>
+        {/* Main Form */}
+        <div className="card main-card">
+          <form onSubmit={analyzeRepo}>
+            <div className="input-group">
+              <span className="input-icon">🔗</span>
+              <input
+                type="text"
+                className="url-input"
+                placeholder="Paste GitHub repository URL..."
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                disabled={loading}
+              />
+            </div>
+            <button
+              type="submit"
+              className="analyze-btn"
+              disabled={loading || !url}
+            >
+              {loading ? (
+                <>
+                  <span className="spinner"></span>
+                  Analyzing...
+                </>
+              ) : (
+                <>🚀 Analyze Repository</>
+              )}
+            </button>
+          </form>
+
+          {/* Example URLs */}
+          {!loading && !result && (
+            <div className="examples">
+              <p className="examples-title">Try these examples:</p>
+              <div className="example-chips">
+                <button 
+                  className="chip" 
+                  onClick={() => setUrl('https://github.com/tiangolo/fastapi')}
+                >
+                  tiangolo/fastapi
+                </button>
+                <button 
+                  className="chip" 
+                  onClick={() => setUrl('https://github.com/pallets/flask')}
+                >
+                  pallets/flask
+                </button>
+                <button 
+                  className="chip" 
+                  onClick={() => setUrl('https://github.com/expressjs/express')}
+                >
+                  expressjs/express
+                </button>
+              </div>
+            </div>
+          )}
         </div>
-      )}
 
-      {error && (
-        <div style={{ marginTop: '20px', padding: '15px', backgroundColor: '#fee2e2', color: '#dc2626', borderRadius: '8px' }}>
-          {error}
-        </div>
-      )}
-
-      {result && (
-        <div style={{ marginTop: '30px' }}>
-          <h2 style={{ color: '#1f2937' }}>📊 Analysis Results</h2>
-          
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px', marginTop: '20px' }}>
-            <div style={{ padding: '15px', backgroundColor: '#dbeafe', borderRadius: '8px', textAlign: 'center' }}>
-              <h3 style={{ margin: '0', color: '#1e40af' }}>{result.analysis.code_quality_score}/100</h3>
-              <p style={{ margin: '5px 0 0 0', color: '#1e3a8a' }}>Code Quality</p>
-            </div>
-            
-            <div style={{ padding: '15px', backgroundColor: '#fecaca', borderRadius: '8px', textAlign: 'center' }}>
-              <h3 style={{ margin: '0', color: '#991b1b' }}>{result.analysis.bugs_found}</h3>
-              <p style={{ margin: '5px 0 0 0', color: '#7f1d1d' }}>Bugs Found</p>
-            </div>
-            
-            <div style={{ padding: '15px', backgroundColor: '#bbf7d0', borderRadius: '8px', textAlign: 'center' }}>
-              <h3 style={{ margin: '0', color: '#166534' }}>{result.analysis.fixes_generated}</h3>
-              <p style={{ margin: '5px 0 0 0', color: '#14532d' }}>Fixes Generated</p>
-            </div>
-            
-            <div style={{ padding: '15px', backgroundColor: '#fde68a', borderRadius: '8px', textAlign: 'center' }}>
-              <h3 style={{ margin: '0', color: '#92400e' }}>{result.analysis.review_score}/100</h3>
-              <p style={{ margin: '5px 0 0 0', color: '#78350f' }}>Review Score</p>
+        {/* Loading Steps */}
+        {loading && (
+          <div className="card loading-card">
+            <h3 className="loading-title">🤖 AI Agents Working...</h3>
+            <div className="steps">
+              {steps.map((step, idx) => (
+                <div 
+                  key={idx} 
+                  className={`step ${idx <= currentStep ? 'active' : ''} ${idx < currentStep ? 'done' : ''}`}
+                >
+                  <div className="step-indicator">
+                    {idx < currentStep ? '✅' : idx === currentStep ? '⚡' : '⏳'}
+                  </div>
+                  <span className="step-text">{step}</span>
+                </div>
+              ))}
             </div>
           </div>
+        )}
 
-          <div style={{ marginTop: '20px', padding: '15px', backgroundColor: result.analysis.approved ? '#d1fae5' : '#fee2e2', borderRadius: '8px', textAlign: 'center' }}>
-            <h3 style={{ margin: '0', color: result.analysis.approved ? '#065f46' : '#dc2626' }}>
-              {result.analysis.approved ? '✅ APPROVED' : '⚠️ NEEDS WORK'}
-            </h3>
-            <p style={{ margin: '5px 0 0 0', color: '#4b5563' }}>
-              Confidence: {result.analysis.confidence}
-            </p>
+        {/* Error */}
+        {error && (
+          <div className="card error-card">
+            <span className="error-icon">⚠️</span>
+            <p>{error}</p>
           </div>
+        )}
 
-          <details style={{ marginTop: '20px' }}>
-            <summary style={{ cursor: 'pointer', padding: '10px', backgroundColor: '#f3f4f6', borderRadius: '8px', fontWeight: 'bold' }}>
-              View Detailed Report (JSON)
-            </summary>
-            <pre style={{ backgroundColor: '#1f2937', color: '#e5e7eb', padding: '15px', borderRadius: '8px', overflow: 'auto', fontSize: '12px' }}>
-              {JSON.stringify(result, null, 2)}
-            </pre>
-          </details>
-        </div>
-      )}
+        {/* Results */}
+        {result && (
+          <div className="results">
+            {/* Repo Info */}
+            <div className="card repo-info">
+              <span className="repo-label">Analyzed Repository</span>
+              <h2 className="repo-name">{result.repository}</h2>
+              <div className={`status-badge ${result.analysis.approved ? 'approved' : 'warning'}`}>
+                {result.analysis.approved ? '✅ APPROVED' : '⚠️ NEEDS WORK'}
+                <span className="confidence">Confidence: {result.analysis.confidence}</span>
+              </div>
+            </div>
+
+            {/* Metrics Grid */}
+            <div className="metrics-grid">
+              <div className="metric-card">
+                <div className="metric-icon">📊</div>
+                <div className="metric-value" style={{color: getScoreColor(result.analysis.code_quality_score)}}>
+                  {result.analysis.code_quality_score}
+                </div>
+                <div className="metric-label">Code Quality</div>
+                <div className="metric-sub">out of 100</div>
+              </div>
+
+              <div className="metric-card">
+                <div className="metric-icon">🐛</div>
+                <div className="metric-value" style={{color: '#ef4444'}}>
+                  {result.analysis.bugs_found}
+                </div>
+                <div className="metric-label">Bugs Found</div>
+                <div className="metric-sub">critical issues</div>
+              </div>
+
+              <div className="metric-card">
+                <div className="metric-icon">🔒</div>
+                <div className="metric-value" style={{color: '#f59e0b'}}>
+                  {result.analysis.security_issues}
+                </div>
+                <div className="metric-label">Security</div>
+                <div className="metric-sub">vulnerabilities</div>
+              </div>
+
+              <div className="metric-card">
+                <div className="metric-icon">⚡</div>
+                <div className="metric-value" style={{color: '#3b82f6'}}>
+                  {result.analysis.performance_issues}
+                </div>
+                <div className="metric-label">Performance</div>
+                <div className="metric-sub">optimizations</div>
+              </div>
+
+              <div className="metric-card">
+                <div className="metric-icon">🛠️</div>
+                <div className="metric-value" style={{color: '#10b981'}}>
+                  {result.analysis.fixes_generated}
+                </div>
+                <div className="metric-label">Fixes Generated</div>
+                <div className="metric-sub">auto-corrected</div>
+              </div>
+
+              <div className="metric-card">
+                <div className="metric-icon">🧐</div>
+                <div className="metric-value" style={{color: getScoreColor(result.analysis.review_score)}}>
+                  {result.analysis.review_score}
+                </div>
+                <div className="metric-label">Review Score</div>
+                <div className="metric-sub">agent verified</div>
+              </div>
+            </div>
+
+            {/* Bugs Section */}
+            <div className="card details-card">
+              <h3 className="section-title">🐛 Bugs Detected</h3>
+              {result.details.bugs.bugs.map((bug, idx) => (
+                <div key={idx} className={`issue-item severity-${bug.severity}`}>
+                  <div className="issue-header">
+                    <span className={`severity-badge ${bug.severity}`}>{bug.severity.toUpperCase()}</span>
+                    <span className="file-path">{bug.file}:{bug.line}</span>
+                  </div>
+                  <p className="issue-desc">{bug.description}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Fixes Section */}
+            <div className="card details-card">
+              <h3 className="section-title">🛠️ AI-Generated Fixes</h3>
+              {result.details.fixes.fixes.map((fix, idx) => (
+                <div key={idx} className="fix-item">
+                  <div className="fix-header">
+                    <span className="fix-file">📄 {fix.file}</span>
+                  </div>
+                  <p className="fix-issue">🐛 {fix.original_issue}</p>
+                  <div className="fix-explanation">
+                    <strong>💡 Fix Explanation:</strong>
+                    <p>{fix.explanation}</p>
+                  </div>
+                  <details className="code-details">
+                    <summary>View Fixed Code</summary>
+                    <pre className="code-block">{fix.fixed_code}</pre>
+                  </details>
+                </div>
+              ))}
+            </div>
+
+            {/* Recommendations */}
+            <div className="card details-card">
+              <h3 className="section-title">💡 Agent Recommendations</h3>
+              <ul className="recommendations">
+                {result.details.review.recommendations.map((rec, idx) => (
+                  <li key={idx}>{rec}</li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Raw JSON */}
+            <details className="card json-card">
+              <summary>🔍 View Complete JSON Report</summary>
+              <pre className="json-block">{JSON.stringify(result, null, 2)}</pre>
+            </details>
+          </div>
+        )}
+
+        {/* Footer */}
+        <footer className="footer">
+          <p>Built with ❤️ for ChatGPT × Codex Hackathon 2026</p>
+          <p className="footer-tech">Powered by Groq • FastAPI • React</p>
+        </footer>
+      </div>
     </div>
   )
 }
