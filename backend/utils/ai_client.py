@@ -11,7 +11,7 @@ class AIClient:
             base_url=os.getenv("GROQ_BASE_URL"),
             api_key=os.getenv("GROQ_API_KEY")
         )
-        self.primary_model = "llama-3.3-70b-versatile"
+        self.primary_model = "llama-3.1-8b-instant"
         
         # Backup: OpenRouter with multiple reliable free models
         self.backup_client = OpenAI(
@@ -21,7 +21,7 @@ class AIClient:
         self.backup_models = [
             "meta-llama/llama-3.3-70b-instruct:free",
             "google/gemini-2.0-flash-exp:free",
-            "qwen/qwen-2.5-72b-instruct:free"
+            "mistralai/mistral-7b-instruct:free"
         ]
     
     def ask(self, messages, response_format=None):
