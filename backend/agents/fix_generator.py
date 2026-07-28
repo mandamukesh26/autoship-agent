@@ -33,38 +33,6 @@ def _normalize_fix_data(raw_fix, file_path, bug, reason):
     return _build_fallback_fix(file_path, bug, reason)
 
 
-import json
-import logging
-
-from utils.ai_client import get_groq_response  # Changed from 'ai' to 'get_groq_response'
-
-logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
-logger = logging.getLogger(__name__)
-
-def _build_fallback_fix(file_path, bug, reason):
-    return {
-        "file": file_path,
-        "original_issue": bug.get("description") if isinstance(bug, dict) else None,
-        "fixed_code": "",
-        "explanation": f"Fallback: {reason}",
-    }
-
-def _normalize_fix_data(raw_fix, file_path, bug, reason):
-    if isinstance(raw_fix, dict):
-        normalized = {
-            "file": raw_fix.get("file") or file_path,
-            "original_issue": raw_fix.get("original_issue") or bug.get("description") if isinstance(bug, dict) else None,
-            "fixed_code": raw_fix.get("fixed_code") or "",
-            "explanation": raw_fix.get("explanation") or "No explanation provided.",
-        }
-        if not isinstance(normalized["fixed_code"], str):
-            normalized["fixed_code"] = ""
-        if not isinstance(normalized["explanation"], str):
-            normalized["explanation"] = str(normalized["explanation"])
-        return normalized
-
-    return _build_fallback_fix(file_path, bug, reason)
-
 def generate_fixes(bugs_found, repo_data):
     """
     Agent: Takes bugs detected and generates specific code fixes.
@@ -104,7 +72,7 @@ def generate_fixes(bugs_found, repo_data):
             {
                 "role": "system",
                 "content": """You are an expert code fixer. Given a bug report and original code, generate a fixed version.
-
+                
 Return STRICT JSON:
 {
     "file": "path/to/file",
@@ -127,8 +95,7 @@ Generate the fix."""
         ]
 
         try:
-            # Updated AI call for Groq
-            response = get_groq_response(json.dumps(messages), model="llama3-8b-8192")
+            response = ai.ask(messages, response_format={"type": "json_object"})
             if not isinstance(response, str):
                 raise ValueError("AI response was not a string")
 
