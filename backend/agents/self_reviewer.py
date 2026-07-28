@@ -1,11 +1,10 @@
 import json
 import logging
 
-from utils.ai_client import ai
+from utils.ai_client import get_groq_response  # Updated import
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 logger = logging.getLogger(__name__)
-
 
 def _build_fallback_review(reason):
     return {
@@ -15,7 +14,6 @@ def _build_fallback_review(reason):
         "confidence_level": "low",
         "recommendations": ["Manual review required"],
     }
-
 
 def _normalize_review_response(raw_response):
     if not isinstance(raw_response, dict):
@@ -41,7 +39,6 @@ def _normalize_review_response(raw_response):
         normalized["confidence_level"] = "low"
 
     return normalized
-
 
 def review_fixes(bugs_found, fixes_generated, repo_data):
     """
@@ -78,7 +75,7 @@ def review_fixes(bugs_found, fixes_generated, repo_data):
         {
             "role": "system",
             "content": """You are a senior code reviewer. Review the fixes generated for the bugs found.
-            
+
 Evaluate:
 1. Do the fixes actually solve the reported bugs?
 2. Is the code quality good?
@@ -107,7 +104,8 @@ Review these fixes critically."""
 
     try:
         logger.info("Starting self-review for %d bugs and %d fixes", len(bugs), len(fixes))
-        response = ai.ask(messages, response_format={"type": "json_object"})
+        # Updated AI call for Groq
+        response = get_groq_response(json.dumps(messages), model="llama3-8b-8192")
         if not isinstance(response, str):
             raise ValueError("AI response was not a string")
 

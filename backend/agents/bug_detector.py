@@ -50,7 +50,7 @@ def detect_bugs(repo_data):
             {
                 "role": "system",
                 "content": """You are a senior code auditor. Analyze code for bugs, security vulnerabilities, and performance issues.
-            
+
 Return STRICT JSON format:
 {
     "bugs": [{"severity": "high/medium/low", "file": "path", "line": "number", "description": "details"}],
@@ -66,7 +66,10 @@ Return STRICT JSON format:
             }
         ]
 
-        response = ai.ask(messages, response_format={"type": "json_object"})
+        # Updated AI call (Groq)
+        from utils.ai_client import get_groq_response
+        response = get_groq_response(json.dumps(messages), model="llama3-8b-8192")
+
         parsed_response = json.loads(response)
 
         if not isinstance(parsed_response, dict):
