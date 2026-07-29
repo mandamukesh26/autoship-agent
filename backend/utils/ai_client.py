@@ -19,10 +19,9 @@ class AIClient:
             api_key=os.getenv("OPENROUTER_API_KEY")
         )
         self.backup_models = [
-            "meta-llama/llama-3.3-70b-instruct:free",
-            "google/gemini-2.0-flash-exp:free",
-            "mistralai/mistral-7b-instruct:free"
-        ]
+    "openai/gpt-oss-20b:free",
+    "nvidia/nemotron-nano-9b-v2:free"
+         ]
     
     def ask(self, messages, response_format=None):
         """Try primary first, fallback to backup if fails"""
