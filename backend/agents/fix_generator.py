@@ -18,11 +18,34 @@ def _build_fallback_fix(file_path, bug, reason):
 
 def _normalize_fix_data(raw_fix, file_path, bug, reason):
     if isinstance(raw_fix, dict):
+        # Models sometimes use different key names - accept common variants
+        fixed_code = (
+            raw_fix.get("fixed_code")
+            or raw_fix.get("fix")
+            or raw_fix.get("fixed")
+            or raw_fix.get("code")
+            or raw_fix.get("corrected_code")
+            or raw_fix.get("solution")
+            or ""
+        )
+        explanation = (
+            raw_fix.get("explanation")
+            or raw_fix.get("reason")
+            or raw_fix.get("why")
+            or raw_fix.get("rationale")
+            or "No explanation provided."
+        )
+        original_issue = (
+            raw_fix.get("original_issue")
+            or raw_fix.get("issue")
+            or raw_fix.get("bug")
+            or (bug.get("description") if isinstance(bug, dict) else None)
+        )
         normalized = {
             "file": raw_fix.get("file") or file_path,
-            "original_issue": raw_fix.get("original_issue") or bug.get("description") if isinstance(bug, dict) else None,
-            "fixed_code": raw_fix.get("fixed_code") or "",
-            "explanation": raw_fix.get("explanation") or "No explanation provided.",
+            "original_issue": original_issue,
+            "fixed_code": fixed_code,
+            "explanation": explanation,
         }
         if not isinstance(normalized["fixed_code"], str):
             normalized["fixed_code"] = ""
@@ -72,14 +95,15 @@ def generate_fixes(bugs_found, repo_data):
             {
                 "role": "system",
                 "content": """You are an expert code fixer. Given a bug report and original code, generate a fixed version.
-                
-Return STRICT JSON:
+
+Return STRICT JSON with EXACTLY these key names (do not rename them):
 {
     "file": "path/to/file",
     "original_issue": "description of the bug",
-    "fixed_code": "the corrected code snippet",
+    "fixed_code": "the FULL corrected code for this file",
     "explanation": "why this fix works"
-}"""
+}
+IMPORTANT: "fixed_code" MUST contain the actual corrected code, never empty."""
             },
             {
                 "role": "user",
